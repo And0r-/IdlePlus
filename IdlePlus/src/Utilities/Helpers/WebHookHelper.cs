@@ -41,7 +41,7 @@ namespace IdlePlus.Patches.Minigame
             }
         }
 
-        public static async Task SendMinigameWebhookAsync(string action, string eventType)
+        public static async Task SendMinigameWebhookAsync(string action, global::Guilds.UI.ClanEventType eventType)
         {
             if (!ModSettings.Hooks.ClanEventsEnabled.Value)
                 return;
@@ -50,7 +50,7 @@ namespace IdlePlus.Patches.Minigame
             await SendGetRequestAsync(endpoint);
         }
 
-        public static async Task SendMinigameSeriesWebhookAsync(string action, string eventType)
+        public static async Task SendMinigameSeriesWebhookAsync(string action, global::Guilds.UI.ClanEventType eventType)
         {
             if (!ModSettings.Hooks.ClanEventSeriesEnabled.Value)
                 return;

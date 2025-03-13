@@ -1,8 +1,7 @@
-using System;
-using System.Reflection;
 using HarmonyLib;
-using IdlePlus.Utilities;
 using Minigames;
+using IdlePlus.Utilities;
+using IdlePlus.Settings;
 
 namespace IdlePlus.Patches.Minigame
 {
@@ -10,49 +9,20 @@ namespace IdlePlus.Patches.Minigame
     public class StartGameEventPatch
     {
         [HarmonyPostfix]
-        public static void Postfix(object minigame)
+        public static void Postfix(Minigames.Minigame minigame)
         {
-            if (minigame == null)
+            // Speichere den aktuellen EventType im Tracker
+            MinigameTracker.LastEventType = minigame.EventType;
+            
+            // Sende den "minigame start" Webhook
+            _ = WebHookHelper.SendMinigameWebhookAsync("start", minigame.EventType);
+            
+            // Falls noch keine Serie aktiv ist, starte auch die Serie
+            if (!MinigameTracker.IsSeriesActive)
             {
-                IdleLog.Info("StartGameEventPatch: minigame is null");
-                return;
+                _ = WebHookHelper.SendMinigameSeriesWebhookAsync("start", minigame.EventType);
+                MinigameTracker.IsSeriesActive = true;
             }
-
-            // Get the event type from the minigame instance.
-            string eventType = GetPropertyValue(minigame, "EventType");
-            if (string.IsNullOrEmpty(eventType))
-            {
-                return;
-            }
-
-            EventSeriesTracker.LastEventStart = DateTime.Now;
-            EventSeriesTracker.LastEventType = eventType;
-
-            _ = WebHookHelper.SendMinigameWebhookAsync("start", eventType);
-
-            if (!EventSeriesTracker.IsSeriesActive)
-            {
-                _ = WebHookHelper.SendMinigameSeriesWebhookAsync("start", eventType);
-                EventSeriesTracker.IsSeriesActive = true;
-            }
-        }
-
-        private static string GetPropertyValue(object obj, string propertyName)
-        {
-            try
-            {
-                var prop = obj.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null)
-                {
-                    var value = prop.GetValue(obj);
-                    return value?.ToString() ?? "";
-                }
-            }
-            catch (Exception ex)
-            {
-                IdleLog.Info($"Error retrieving property {propertyName}: {ex.Message}");
-            }
-            return "";
         }
     }
 }

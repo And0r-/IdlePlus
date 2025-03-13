@@ -1,29 +1,41 @@
 using System;
-using System.Threading.Tasks;
 using HarmonyLib;
 using IdlePlus.Utilities;
 using Minigames;
-using IdlePlus.Settings; // To access ModSettings.Hooks
+using IdlePlus.Settings;
+using Network;
 
 namespace IdlePlus.Patches.Minigame
 {
     [HarmonyPatch(typeof(MinigameManager), "EndMinigame")]
-    public class EndMinigamePatch
+    public class EndGameEventPatch
     {
         [HarmonyPostfix]
-        public static async void Postfix()
+        public static void Postfix(MinigameEndedMessage message)
         {
-            _ = WebHookHelper.SendMinigameWebhookAsync("stop", EventSeriesTracker.LastEventType);
-
-            // Wait for 2 seconds to allow a potential new event start.
-            await Task.Delay(2000);
-
-            if (EventSeriesTracker.IsSeriesActive && (DateTime.Now - EventSeriesTracker.LastEventStart).TotalSeconds >= 2)
+            try
             {
-                _ = WebHookHelper.SendMinigameSeriesWebhookAsync("stop", EventSeriesTracker.LastEventType);
-                EventSeriesTracker.IsSeriesActive = false;
-                EventSeriesTracker.LastEventStart = DateTime.MinValue;
-                EventSeriesTracker.LastEventType = "";
+                // Sende den normalen "minigame stop" Webhook, basierend auf dem im Tracker gespeicherten EventType
+                _ = WebHookHelper.SendMinigameWebhookAsync("stop", MinigameTracker.LastEventType);
+                
+                // Prüfe, ob der nächste Event leer ist (NextMinigameType == "None")
+                if (message.NextMinigameType.ToString() == "None")
+                {
+                    IdleLog.Info("Kein weiterer Event erkannt – sende 'minigameserie stop' Webhook.");
+                    _ = WebHookHelper.SendMinigameSeriesWebhookAsync("stop", MinigameTracker.LastEventType);
+                    
+                    // Reset des Trackers
+                    MinigameTracker.IsSeriesActive = false;
+                    MinigameTracker.LastEventType = global::Guilds.UI.ClanEventType.None;
+                }
+                else
+                {
+                    IdleLog.Info($"Nächster Event erkannt, NextMinigameType: {message.NextMinigameType}");
+                }
+            }
+            catch (Exception ex)
+            {
+                IdleLog.Error($"Fehler im EndGameEventPatch: {ex.Message}");
             }
         }
     }

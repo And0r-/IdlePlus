@@ -9,6 +9,6 @@ namespace IdlePlus.Patches.Minigame
         // Indicates if an event series is active.
         public static bool IsSeriesActive { get; set; } = false;
         // Stores the event type of the last event.
-        public static string LastEventType { get; set; } = "";
+        public static global::Guilds.UI.ClanEventType LastEventType { get; set; } = global::Guilds.UI.ClanEventType.None;
     }
 }
