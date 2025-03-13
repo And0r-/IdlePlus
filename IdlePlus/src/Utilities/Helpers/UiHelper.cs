@@ -16,14 +16,14 @@ namespace IdlePlus.Utilities.Helpers {
 		private static GameObject _baseDropdown;
 		private static GameObject _baseToggle;
 		private static GameObject _baseInputField;
-
+		
 		[InitializeOnce(Priority = InitPriority.UiHelper, OnSceneLoad = "*")]
 		private static void InitializeOnce() {
 			PrefabContainer = GameObjects.New("IdlePlusPrefabContainer");
 			PrefabContainer.SetActive(false);
 			PrefabContainer.hideFlags = HideFlags.HideAndDontSave;
 			Object.DontDestroyOnLoad(PrefabContainer);
-
+			
 			InitializeDropdown();
 			InitializeToggle();
 			InitializeInputField();
@@ -33,20 +33,20 @@ namespace IdlePlus.Utilities.Helpers {
 			var copyDropdown =
 				GameObjects.FindByPathNonNull(
 					"PopupManager/Canvas/HardPopups/SettingsPopup2/Panels/GeneralSection/LanguageDropdown (1)");
-
+			
 			_baseDropdown = Object.Instantiate(copyDropdown, PrefabContainer.transform, false);
 			_baseDropdown.name = "IdlePlusDropdown";
 
 			// An exception might be thrown by the line under.
 			Object.DestroyImmediate(_baseDropdown.GetComponent<LocalizationDropdown>());
-
+			
 			var dropdown = _baseDropdown.GetComponent<CustomDropdown>();
 			dropdown.items.Clear();
 			dropdown.items.Add(new CustomDropdown.Item() { itemName = "ignore" });
 			dropdown.onValueChanged = new CustomDropdown.DropdownEvent();
 			dropdown.onItemTextChanged = new CustomDropdown.ItemTextChangedEvent();
 			dropdown.onDropdownClicked = new UnityEvent();
-
+			
 			// Remove unused components and objects.
 			Object.DestroyImmediate(_baseDropdown.Find("Trigger").GetComponent<EventTrigger>());
 			var itemList = _baseDropdown.Find("Content/Item List/Scroll Area/List");
@@ -58,7 +58,7 @@ namespace IdlePlus.Utilities.Helpers {
 		private static void InitializeToggle() {
 			var copyToggle = GameObjects.FindByPathNonNull(
 				"PopupManager/Canvas/HardPopups/SettingsPopup2/Panels/GeneralSection/ScreenSleepToggle/Toggle");
-
+			
 			_baseToggle = Object.Instantiate(copyToggle, PrefabContainer.transform, false);
 			_baseToggle.name = "IdlePlusToggle";
 
@@ -88,7 +88,7 @@ namespace IdlePlus.Utilities.Helpers {
 
 			var customDropdown = dropdown.GetComponent<CustomDropdown>();
 			customDropdown.items.Clear();
-
+			
 			if (parent != null) dropdown.transform.SetParent(parent, false);
 			return dropdown;
 		}

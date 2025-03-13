@@ -49,14 +49,5 @@ namespace IdlePlus.Patches.Minigame
             string endpoint = $"minigame/{action}/{eventType}";
             await SendGetRequestAsync(endpoint);
         }
-
-        public static async Task SendMinigameSeriesWebhookAsync(string action, global::Guilds.UI.ClanEventType eventType)
-        {
-            if (!ModSettings.Hooks.ClanEventSeriesEnabled.Value)
-                return;
-
-            string endpoint = $"minigameserie/{action}/{eventType}";
-            await SendGetRequestAsync(endpoint);
-        }
     }
 }

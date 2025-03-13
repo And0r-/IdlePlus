@@ -12,12 +12,6 @@ namespace IdlePlus.Patches.Minigame
             MinigameTracker.LastEventType = minigame.EventType;
             
             _ = WebHookHelper.SendMinigameWebhookAsync("start", minigame.EventType);
-            
-            if (!MinigameTracker.IsSeriesActive)
-            {
-                _ = WebHookHelper.SendMinigameSeriesWebhookAsync("start", minigame.EventType);
-                MinigameTracker.IsSeriesActive = true;
-            }
         }
     }
 }
