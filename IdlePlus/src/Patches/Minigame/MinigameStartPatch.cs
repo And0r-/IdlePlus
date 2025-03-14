@@ -1,5 +1,7 @@
 using HarmonyLib;
 using Minigames;
+using IdlePlus.Utilities;
+using System.Collections.Generic;
 
 namespace IdlePlus.Patches.Minigame
 {
@@ -10,8 +12,15 @@ namespace IdlePlus.Patches.Minigame
         public static void Postfix(Minigames.Minigame minigame)
         {
             MinigameTracker.LastEventType = minigame.EventType;
-            
-            _ = WebHookHelper.SendMinigameWebhookAsync("start", minigame.EventType);
+
+            WebhookManager.FireWebhookAsync(
+                WebhookType.Minigame,
+                new Dictionary<string, string>
+                {
+                    { "action", "start" },
+                    { "type", minigame.EventType.ToString() }
+                }
+            );
         }
     }
 }

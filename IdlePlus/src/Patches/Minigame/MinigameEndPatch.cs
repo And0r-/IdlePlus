@@ -1,5 +1,7 @@
 using HarmonyLib;
 using Minigames;
+using IdlePlus.Utilities;
+using System.Collections.Generic;
 
 namespace IdlePlus.Patches.Minigame
 {
@@ -9,7 +11,15 @@ namespace IdlePlus.Patches.Minigame
         [HarmonyPostfix]
         public static void Postfix()
         {
-            _ = WebHookHelper.SendMinigameWebhookAsync("stop", MinigameTracker.LastEventType);
+            WebhookManager.FireWebhookAsync(
+                WebhookType.Minigame,
+                new Dictionary<string, string>
+                {
+                    { "action", "stop" },
+                    { "type", MinigameTracker.LastEventType.ToString() }
+                }
+            );
+
             MinigameTracker.LastEventType = global::Guilds.UI.ClanEventType.None;
         }
     }
