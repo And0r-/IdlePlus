@@ -11,7 +11,7 @@ namespace IdlePlus.Patches.Minigame
         [HarmonyPostfix]
         public static void Postfix()
         {
-            WebhookManager.FireWebhookAsync(
+            WebhookManager.AddSendWebhook(
                 WebhookType.Minigame,
                 new Dictionary<string, string>
                 {

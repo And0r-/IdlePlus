@@ -13,7 +13,7 @@ namespace IdlePlus.Patches.Minigame
         {
             MinigameTracker.LastEventType = minigame.EventType;
 
-            WebhookManager.FireWebhookAsync(
+            WebhookManager.AddSendWebhook(
                 WebhookType.Minigame,
                 new Dictionary<string, string>
                 {
