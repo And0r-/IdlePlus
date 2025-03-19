@@ -8,7 +8,6 @@ using IdlePlus.API.Event.Contexts;
 using IdlePlus.API.Popup;
 using IdlePlus.API.Popup.Popups;
 using IdlePlus.Attributes;
-using IdlePlus.Command;
 using IdlePlus.IdleClansAPI;
 using IdlePlus.Patches;
 using IdlePlus.Settings;
@@ -22,20 +21,20 @@ namespace IdlePlus {
 	[BepInPlugin(ModGuid, ModName, ModVersion)]
 	public class IdlePlus : BasePlugin {
 		
-		public const string
+		internal const string
 			ModName = "Idle Plus",
 			ModAuthor = "Uraxys",
 			ModID = "idleplus",
 			ModGuid = "dev.uraxys.idleplus",
-			ModVersion = "1.4.0"
+			ModVersion = "1.4.2"
 #if DEBUG
 			             + "-DEBUG";
 #else
 			             ;
 #endif
 
-		public const bool PerformanceTest = false;
-		public static IntPtr WindowHandle = IntPtr.Zero;
+		internal const bool PerformanceTest = false;
+		internal static IntPtr WindowHandle = IntPtr.Zero;
 		
 		public override void Load() {
 			IdleLog.Logger = Log;
@@ -43,8 +42,7 @@ namespace IdlePlus {
 			
 			TexturePackManager.Load();
 			ModSettings.Load();
-			CommandManager.Load();
-			
+
 			// Attributes
 			RegisterIl2CppAttributeHandler.Register();
 			InitializeAttributeHandler.Load();
@@ -75,14 +73,13 @@ namespace IdlePlus {
 		}
 		
 		private static void OnLogin(PlayerLoginEventContext ctx) {
-			// Do one time initialization for objects that are only created once.
-			InitializeOnceAttributeHandler.InitializeOnce();
-			
 			// Find the player market and "initialize" it.
 			var playerMarket = Object.FindObjectOfType<PlayerMarketPage>(true);
 			playerMarket.gameObject.SetActive(true);
 			playerMarket.gameObject.SetActive(false);
-				
+			
+			// Do one time initialization for objects that are only created once.
+			InitializeOnceAttributeHandler.InitializeOnce();
 			// Do initialization for objects that are recreated on login.
 			InitializeAttributeHandler.Initialize();
 				
