@@ -205,5 +205,14 @@ namespace IdlePlus.Utilities
             public string JsonRequestData;
             public int RetryCount;
         }
+
+        /// <summary>
+        /// Gets the number of webhook requests currently in the processing queue.
+        /// </summary>
+        /// <returns>The number of pending webhook requests.</returns>
+        public static int GetQueuedRequestCount()
+        {
+            return _webhookQueue.Count;
+        }
     }
 }
