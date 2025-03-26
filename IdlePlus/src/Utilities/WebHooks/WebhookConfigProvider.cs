@@ -21,7 +21,7 @@ namespace IdlePlus.Utilities
         {
             {
                 WebhookType.Minigame, new WebhookConfig {
-                    RequestMethod = "GET",
+                    RequestMethod = "POST",
                     UrlPath = "/minigame/{action}/{type}",
                     SettingsName = "Minigames (Clan Events)"
                 }
@@ -29,7 +29,7 @@ namespace IdlePlus.Utilities
             {
                 WebhookType.MarketData, new WebhookConfig {
                     RequestMethod = "POST",
-                    UrlPath = "/MarketDataTest/{action}",
+                    UrlPath = "/MarketDataTest/{action}/{playerName}/{gameMode}/{clanName}/{timestamp}/{clientVersion}",
                     SettingsName = "Only A Test"
                 }
             }
