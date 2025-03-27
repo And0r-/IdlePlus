@@ -13,6 +13,7 @@ namespace IdlePlus.Utilities
         /// </summary>
         /// <param name="json">The JSON string to validate.</param>
         /// <returns>The same JSON string if it is valid.</returns>
+        /// <exception cref="ArgumentException">Thrown when the provided string is not valid JSON.</exception>
         public static string Serialize(string json)
         {
             if (string.IsNullOrEmpty(json))
@@ -29,6 +30,7 @@ namespace IdlePlus.Utilities
         /// </summary>
         /// <param name="il2cppObj">The Il2CppSystem.Object to serialize.</param>
         /// <returns>The resulting JSON string.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when serialization fails or produces invalid JSON.</exception>
         public static string Serialize(Il2CppSystem.Object il2cppObj)
         {
             if (il2cppObj == null)
@@ -53,7 +55,7 @@ namespace IdlePlus.Utilities
         }
         
         /// <summary>
-        /// Validates whether the given string is a valid JSON.
+        /// Validates whether the given string is valid JSON.
         /// </summary>
         /// <param name="json">The JSON string to validate.</param>
         /// <returns>True if the string is valid JSON; otherwise, false.</returns>

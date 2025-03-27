@@ -8,7 +8,7 @@ using IdlePlus.Settings;
 namespace IdlePlus.Utilities
 {
     /// <summary>
-    /// Handles HTTP requests for webhooks.
+    /// Handles HTTP requests for webhooks with support for timeouts, retries, and error handling.
     /// </summary>
     public class HttpService
     {
@@ -17,6 +17,9 @@ namespace IdlePlus.Utilities
         private static readonly object _lockObject = new object();
         private static bool _isInitialized = false;
 
+        /// <summary>
+        /// Gets the singleton instance of the HttpService.
+        /// </summary>
         public static HttpService Instance => _instance;
 
         // Static constructor to initialize the HttpClient
@@ -102,15 +105,16 @@ namespace IdlePlus.Utilities
                     
                     AddAuthorizationHeader(request);
 
-                    if (jsonContent != null && httpMethod == HttpMethod.Post)
+                    if (jsonContent != null && (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put))
                     {
                         request.Content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
                     }
 
+                    IdleLog.Debug($"[HttpService] Sending {httpMethod} request to {url}");
                     var response = await _client.SendAsync(request, cts.Token);
                     
                     // Log response details
-                    IdleLog.Info($"[HttpService] Response Status: {response.StatusCode}");
+                    IdleLog.Info($"[HttpService] Response Status: {response.StatusCode} for {url}");
                     
                     if (!response.IsSuccessStatusCode)
                     {
@@ -149,6 +153,8 @@ namespace IdlePlus.Utilities
         /// <summary>
         /// Returns the HttpMethod corresponding to the given request method string.
         /// </summary>
+        /// <param name="requestMethod">The HTTP method as a string.</param>
+        /// <returns>The corresponding HttpMethod object.</returns>
         private HttpMethod GetHttpMethod(string requestMethod)
         {
             if (string.IsNullOrEmpty(requestMethod))
@@ -178,6 +184,7 @@ namespace IdlePlus.Utilities
         /// <summary>
         /// Adds the Authorization header to the HTTP request if a token is provided.
         /// </summary>
+        /// <param name="request">The HTTP request to add the header to.</param>
         private void AddAuthorizationHeader(HttpRequestMessage request)
         {
             try
@@ -197,6 +204,9 @@ namespace IdlePlus.Utilities
         /// <summary>
         /// Builds the full URL from the base URL and the path with parameters.
         /// </summary>
+        /// <param name="baseUrl">The base URL.</param>
+        /// <param name="urlPath">The path with parameters.</param>
+        /// <returns>The complete URL.</returns>
         public string BuildFullUrl(string baseUrl, string urlPath)
         {
             if (string.IsNullOrEmpty(baseUrl))

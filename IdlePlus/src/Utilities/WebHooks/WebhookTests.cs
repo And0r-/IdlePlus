@@ -19,7 +19,7 @@ namespace IdlePlus.Utilities
         {
             IdleLog.Info("[WebhookTests] Starting webhook tests...");
 
-            // Test 1: Call with an Il2CppSystem-compatible JSON string.
+            // Test 1: Call with an Il2CppSystem-compatible JSON string
             IdleLog.Debug("[WebhookTests] Test 1: Il2CppSystem-compatible JSON string");
             WebhookManager.AddSendWebhook(
                 WebhookType.MarketData,
@@ -30,7 +30,7 @@ namespace IdlePlus.Utilities
                 "[{\"dummy\":true}]"
             );
 
-            // Test 2: Call with null JSON data (should simply send a GET request).
+            // Test 2: Call with null JSON data (should simply send a GET request)
             IdleLog.Debug("[WebhookTests] Test 2: Null JSON data");
             WebhookManager.AddSendWebhook(
                 WebhookType.MarketData,
@@ -41,7 +41,7 @@ namespace IdlePlus.Utilities
                 null
             );
 
-            // Test 3: Call with a valid JSON string.
+            // Test 3: Call with a valid JSON string
             IdleLog.Debug("[WebhookTests] Test 3: Valid JSON string");
             string validJson = "{\"price\":123,\"currency\":\"USD\"}";
             WebhookManager.AddSendWebhook(
@@ -53,7 +53,7 @@ namespace IdlePlus.Utilities
                 validJson
             );
 
-            // Test 4: Call with an invalid JSON string (expected to fail).
+            // Test 4: Call with an invalid JSON string (expected to fail)
             IdleLog.Debug("[WebhookTests] Test 4: Invalid JSON string (expected to fail)");
             WebhookManager.AddSendWebhook(
                 WebhookType.MarketData,
@@ -71,10 +71,11 @@ namespace IdlePlus.Utilities
         /// <summary>
         /// Runs a single test with the specified parameters.
         /// </summary>
+        /// <param name="type">The webhook type to test.</param>
+        /// <param name="pathParams">The path parameters for the request.</param>
+        /// <param name="jsonData">Optional JSON data for the request body.</param>
         public static void RunSingleTest(WebhookType type, Dictionary<string, string> pathParams, string jsonData = null)
         {
-            // IdleLog.Info($"[WebhookTests] Running single test: Type={type}, Params={string.Join(", ", pathParams.Select(kv => $"{kv.Key}={kv.Value}"))}");
-
             WebhookManager.AddSendWebhook(
                 type,
                 pathParams,
@@ -103,7 +104,6 @@ namespace IdlePlus.Utilities
 
                 _runningRepeater = IdleTasks.Repeat(0, intervalSeconds, task =>
                 {
-                    // Netzwerkprüfung entfernt - vereinfacht für bessere Kompatibilität
                     RunTests();
                     IdleLog.Info("[WebhookTests] Test run complete.");
                 });
@@ -189,7 +189,7 @@ namespace IdlePlus.Utilities
 
                 try
                 {
-                    // Verwenden Sie Reflection, um die RepeatTime-Eigenschaft zu lesen
+                    // Use reflection to read the RepeatTime property
                     var repeatTimeProperty = _runningRepeater.GetType().GetProperty("RepeatTime");
                     if (repeatTimeProperty != null)
                     {

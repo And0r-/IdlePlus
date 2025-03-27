@@ -7,7 +7,10 @@ namespace IdlePlus.Utilities
     /// </summary>
     public enum WebhookType
     {
+        /// <summary>Minigame/clan event webhooks.</summary>
         Minigame,
+        
+        /// <summary>Market data webhooks.</summary>
         MarketData
     }
 
@@ -30,7 +33,7 @@ namespace IdlePlus.Utilities
                 WebhookType.MarketData, new WebhookConfig {
                     RequestMethod = "POST",
                     UrlPath = "/MarketDataTest/{action}/{playerName}/{gameMode}/{clanName}/{timestamp}/{clientVersion}",
-                    SettingsName = "Only A Test"
+                    SettingsName = "Market Data"
                 }
             }
         };
@@ -43,6 +46,36 @@ namespace IdlePlus.Utilities
         public static WebhookConfig GetConfig(WebhookType type)
         {
             return _configs.TryGetValue(type, out var config) ? config : null;
+        }
+        
+        /// <summary>
+        /// Validates a webhook configuration.
+        /// </summary>
+        /// <param name="type">The webhook type to validate.</param>
+        /// <returns>True if the configuration is valid; otherwise, false.</returns>
+        public static bool ValidateConfig(WebhookType type)
+        {
+            if (!_configs.TryGetValue(type, out var config))
+                return false;
+                
+            // Check for required fields
+            if (string.IsNullOrEmpty(config.RequestMethod) || string.IsNullOrEmpty(config.UrlPath))
+                return false;
+                
+            // Additional validation could be added here
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Gets all available webhook types.
+        /// </summary>
+        /// <returns>An array of all webhook types.</returns>
+        public static WebhookType[] GetAvailableTypes()
+        {
+            var types = new WebhookType[_configs.Count];
+            _configs.Keys.CopyTo(types, 0);
+            return types;
         }
     }
 

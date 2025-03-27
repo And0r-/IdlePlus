@@ -27,15 +27,34 @@ namespace IdlePlus.Command.Commands {
 				.Then(Argument.Of("message", Arguments.GreedyString())
 					.Executes(HandleSay)));
 
+            // Webhook Commands
             var webhookCommand = Literal.Of("webhook");
+            
+            // Test Command
             webhookCommand.Then(Literal.Of("test").Executes(HandleWebhookTest));
+            
+            // Start Repeater Command
             webhookCommand.Then(Literal.Of("start")
                 .Executes(context => HandleWebhookStartRepeater(context, 5))
                 .Then(Argument.Of("interval", Arguments.Integer(1, 60))
                     .Executes(context => HandleWebhookStartRepeater(context, context.GetArgument<int>("interval")))));
+            
+            // Stop Repeater Command
             webhookCommand.Then(Literal.Of("stop").Executes(HandleWebhookStopRepeater));
+            
+            // Status Command
             webhookCommand.Then(Literal.Of("status").Executes(HandleWebhookStatus));
             
+            // Stats Command
+            webhookCommand.Then(Literal.Of("stats").Executes(HandleWebhookStats));
+            
+            // Stats Reset Command
+            webhookCommand.Then(Literal.Of("stats_reset").Executes(HandleWebhookStatsReset));
+            
+            // Cleanup Command
+            webhookCommand.Then(Literal.Of("cleanup").Executes(HandleWebhookCleanup));
+            
+            // Add the webhook command to the main command
             command.Then(webhookCommand);
             
 			registry.Register(command);
@@ -106,16 +125,18 @@ namespace IdlePlus.Command.Commands {
 		}
 
         /*
-         * Webhook Tests
+         * Webhook Handlers
          */
-        private static void HandleWebhookTest(CommandContext<CommandSender> context) {
+
+        private static int HandleWebhookTest(CommandContext<CommandSender> context) {
             try {
                 IdleLog.Info("[DevCommand] Running webhook tests...");
                 WebhookTests.RunTests();
                 IdleLog.Info("[DevCommand] Webhook tests queued successfully.");
+                return 1;
             } catch (Exception ex) {
                 IdleLog.Error($"[DevCommand] Error running webhook tests: {ex.Message}");
-                IdleLog.Error($"[DevCommand] {ex.StackTrace}");
+                return 0;
             }
         }
 
@@ -126,14 +147,13 @@ namespace IdlePlus.Command.Commands {
                 if (started) {
                     IdleLog.Info($"[DevCommand] Started webhook test repeater with {intervalSeconds}s interval.");
                 } else {
-                    IdleLog.Info("[DevCommand] Webhook test repeater is already running. Stop it first to change the interval.");
+                    IdleLog.Info("[DevCommand] Webhook test repeater is already running.");
                 }
+                return 1;
             } catch (Exception ex) {
                 IdleLog.Error($"[DevCommand] Error starting webhook repeater: {ex.Message}");
-                IdleLog.Error($"[DevCommand] {ex.StackTrace}");
+                return 0;
             }
-            
-            return 1;
         }
 
         private static int HandleWebhookStopRepeater(CommandContext<CommandSender> context) {
@@ -145,30 +165,66 @@ namespace IdlePlus.Command.Commands {
                 } else {
                     IdleLog.Info("[DevCommand] No webhook test repeater was running.");
                 }
+                return 1;
             } catch (Exception ex) {
                 IdleLog.Error($"[DevCommand] Error stopping webhook repeater: {ex.Message}");
-                IdleLog.Error($"[DevCommand] {ex.StackTrace}");
+                return 0;
             }
-            
-            return 1;
         }
 
         private static int HandleWebhookStatus(CommandContext<CommandSender> context) {
             try {
                 bool isRunning = WebhookTests.IsRepeaterRunning();
+                int queuedCount = WebhookManager.GetQueuedRequestCount();
                 
                 if (isRunning) {
                     int interval = WebhookTests.GetRepeaterInterval();
-                    IdleLog.Info($"[DevCommand] Webhook test repeater is running with a {interval}s interval.");
+                    IdleLog.Info($"[DevCommand] Webhook test repeater is running with a {interval}s interval. Queued requests: {queuedCount}");
                 } else {
-                    IdleLog.Info("[DevCommand] No webhook test repeater is currently running.");
+                    IdleLog.Info($"[DevCommand] No webhook test repeater is currently running. Queued requests: {queuedCount}");
                 }
+                return 1;
             } catch (Exception ex) {
                 IdleLog.Error($"[DevCommand] Error checking webhook status: {ex.Message}");
-                IdleLog.Error($"[DevCommand] {ex.StackTrace}");
+                return 0;
             }
-            
-            return 1;
+        }
+
+        private static int HandleWebhookStats(CommandContext<CommandSender> context) {
+            try {
+                string report = WebhookMetrics.GetReport();
+                IdleLog.Info($"[DevCommand] Webhook Statistics:\n{report}");
+                return 1;
+            } catch (Exception ex) {
+                IdleLog.Error($"[DevCommand] Error getting webhook stats: {ex.Message}");
+                return 0;
+            }
+        }
+
+        private static int HandleWebhookStatsReset(CommandContext<CommandSender> context) {
+            try {
+                WebhookMetrics.Reset();
+                IdleLog.Info("[DevCommand] Webhook statistics have been reset.");
+                return 1;
+            } catch (Exception ex) {
+                IdleLog.Error($"[DevCommand] Error resetting webhook stats: {ex.Message}");
+                return 0;
+            }
+        }
+
+        private static int HandleWebhookCleanup(CommandContext<CommandSender> context) {
+            try {
+                WebhookManager.CleanupAsync().ContinueWith(task => {
+                    if (task.Exception != null) {
+                        IdleLog.Error($"[DevCommand] Error during webhook cleanup: {task.Exception.Message}");
+                    }
+                });
+                IdleLog.Info("[DevCommand] Webhook resources are being cleaned up.");
+                return 1;
+            } catch (Exception ex) {
+                IdleLog.Error($"[DevCommand] Error during webhook cleanup: {ex.Message}");
+                return 0;
+            }
         }
     }
 }

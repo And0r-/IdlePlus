@@ -31,7 +31,7 @@ namespace IdlePlus.Utilities
             {
                 lock (_tasksLock)
                 {
-                    // Zähle nur nicht abgeschlossene Tasks
+                    // Count only non-completed tasks
                     return _runningTasks.Count;
                 }
             }
@@ -133,109 +133,130 @@ namespace IdlePlus.Utilities
         /// <summary>
         /// Continuously processes the queue asynchronously with parallel execution.
         /// </summary>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         private async Task ProcessQueueAsync(CancellationToken cancellationToken)
         {
             IdleLog.Debug("[WebhookQueue] Started processing queue in parallel mode");
             
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                // Prüfe, ob die Queue leer ist
-                if (_queue.IsEmpty)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    // Warten, bis alle laufenden Tasks abgeschlossen sind
-                    if (ActiveTasksCount > 0)
+                    // Check if the queue is empty
+                    if (_queue.IsEmpty)
                     {
-                        IdleLog.Debug($"[WebhookQueue] Queue empty, waiting for {ActiveTasksCount} tasks to complete");
-                        await Task.Delay(100, cancellationToken);
-                        continue;
+                        // Wait until all running tasks are completed
+                        if (ActiveTasksCount > 0)
+                        {
+                            IdleLog.Debug($"[WebhookQueue] Queue empty, waiting for {ActiveTasksCount} tasks to complete");
+                            await Task.Delay(100, cancellationToken);
+                            continue;
+                        }
+                        else
+                        {
+                            // No items and no running tasks - we're done
+                            IdleLog.Debug("[WebhookQueue] Queue processing complete");
+                            break;
+                        }
+                    }
+
+                    // Too many consecutive errors - take a pause
+                    if (_consecutiveErrors >= _maxConsecutiveErrors)
+                    {
+                        IdleLog.Error($"[WebhookQueue] Pausing processing after {_consecutiveErrors} consecutive errors. Will retry in 30 seconds.");
+                        try
+                        {
+                            await Task.Delay(30000, cancellationToken); // Wait 30 seconds
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            break;
+                        }
+                        _consecutiveErrors = 0;  // Reset the counter and try again
+                    }
+
+                    // Try to take an element from the queue
+                    if (_queue.TryDequeue(out var item))
+                    {
+                        // Wait until a slot for a new parallel task is available
+                        await _parallelismLimiter.WaitAsync(cancellationToken);
+                        
+                        // Start processing as a separate task
+                        var processingTask = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await ProcessItemAsync(item);
+                                Interlocked.Exchange(ref _consecutiveErrors, 0); // Thread-safe reset
+                                IdleLog.Debug($"[WebhookQueue] Task completed successfully, active tasks: {ActiveTasksCount}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Interlocked.Increment(ref _consecutiveErrors);
+                                IdleLog.Error($"[WebhookQueue] Error processing item: {ex.Message}");
+                            }
+                            finally
+                            {
+                                // Release the parallel slot
+                                _parallelismLimiter.Release();
+                            }
+                        }, cancellationToken);
+                        
+                        // Add a continuation to remove the task from the list
+                        var task = processingTask.ContinueWith(t => 
+                        {
+                            lock (_tasksLock)
+                            {
+                                _runningTasks.Remove(processingTask);
+                            }
+                        }, TaskContinuationOptions.ExecuteSynchronously);
+                        
+                        // Add the task to the list of active tasks
+                        lock (_tasksLock)
+                        {
+                            _runningTasks.Add(processingTask);
+                            IdleLog.Debug($"[WebhookQueue] Started new task, active tasks: {_runningTasks.Count}");
+                        }
                     }
                     else
                     {
-                        // Keine Items und keine laufenden Tasks - wir sind fertig
-                        IdleLog.Debug("[WebhookQueue] Queue processing complete");
-                        break;
+                        // Wait briefly if we couldn't get an item
+                        await Task.Delay(50, cancellationToken);
                     }
                 }
-
-                // Zu viele aufeinanderfolgende Fehler - Pause machen
-                if (_consecutiveErrors >= _maxConsecutiveErrors)
+            }
+            finally
+            {
+                // Wait for completion of all running tasks
+                Task[] tasksToWaitFor;
+                lock (_tasksLock)
                 {
-                    IdleLog.Error($"[WebhookQueue] Pausing processing after {_consecutiveErrors} consecutive errors. Will retry in 30 seconds.");
+                    tasksToWaitFor = _runningTasks.ToArray();
+                    _runningTasks.Clear();  // Clear the list to prevent memory leaks
+                }
+                
+                if (tasksToWaitFor.Length > 0)
+                {
+                    IdleLog.Debug($"[WebhookQueue] Waiting for {tasksToWaitFor.Length} tasks to complete during cleanup");
                     try
                     {
-                        await Task.Delay(30000, cancellationToken); // Wait 30 seconds
+                        // Use a timeout to avoid hanging
+                        var waitTask = Task.WhenAll(tasksToWaitFor);
+                        var completedTask = await Task.WhenAny(waitTask, Task.Delay(2000));
+                        
+                        if (completedTask != waitTask)
+                        {
+                            IdleLog.Warn("[WebhookQueue] Some tasks did not complete within timeout period during cleanup");
+                        }
                     }
-                    catch (TaskCanceledException)
+                    catch (Exception ex)
                     {
-                        break;
-                    }
-                    _consecutiveErrors = 0;  // Reset the counter and try again
-                }
-
-                // Versuche, ein Element aus der Queue zu nehmen
-                if (_queue.TryDequeue(out var item))
-                {
-                    // Warte, bis ein Slot für eine neue parallele Task verfügbar ist
-                    await _parallelismLimiter.WaitAsync(cancellationToken);
-                    
-                    // Starte die Verarbeitung als separate Task
-                    var processingTask = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await ProcessItemAsync(item);
-                            Interlocked.Exchange(ref _consecutiveErrors, 0); // Thread-safe Reset
-                            IdleLog.Debug($"[WebhookQueue] Task completed successfully, active tasks: {ActiveTasksCount}");
-                        }
-                        catch (Exception ex)
-                        {
-                            Interlocked.Increment(ref _consecutiveErrors);
-                            IdleLog.Error($"[WebhookQueue] Error processing item: {ex.Message}");
-                        }
-                        finally
-                        {
-                            // Freigabe des parallelen Slots
-                            _parallelismLimiter.Release();
-                        }
-                    }, cancellationToken);
-                    
-                    // Fügen Sie eine Continuation hinzu, um die Task aus der Liste zu entfernen
-                    var task = processingTask.ContinueWith(t => 
-                    {
-                        lock (_tasksLock)
-                        {
-                            _runningTasks.Remove(processingTask);
-                        }
-                    }, TaskContinuationOptions.ExecuteSynchronously);
-                    
-                    // Füge die Task zur Liste der aktiven Tasks hinzu
-                    lock (_tasksLock)
-                    {
-                        _runningTasks.Add(processingTask);
-                        IdleLog.Debug($"[WebhookQueue] Started new task, active tasks: {_runningTasks.Count}");
+                        IdleLog.Error($"[WebhookQueue] Error waiting for tasks during cleanup: {ex.Message}");
                     }
                 }
-                else
-                {
-                    // Warte kurz, wenn wir kein Element entnehmen konnten
-                    await Task.Delay(50, cancellationToken);
-                }
+                
+                IdleLog.Debug("[WebhookQueue] Queue processing finished and resources cleaned up");
             }
-            
-            // Warte auf Abschluss aller laufenden Tasks
-            Task[] tasksToWaitFor;
-            lock (_tasksLock)
-            {
-                tasksToWaitFor = _runningTasks.ToArray();
-            }
-            
-            if (tasksToWaitFor.Length > 0)
-            {
-                IdleLog.Debug($"[WebhookQueue] Waiting for {tasksToWaitFor.Length} tasks to complete");
-                await Task.WhenAll(tasksToWaitFor);
-            }
-            
-            IdleLog.Debug("[WebhookQueue] Queue processing finished");
         }
 
         /// <summary>
@@ -251,6 +272,75 @@ namespace IdlePlus.Utilities
             catch (Exception ex)
             {
                 IdleLog.Error($"[WebhookQueue] Error cancelling processing: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Cancels all ongoing queue processing and waits until all tasks are completed.
+        /// </summary>
+        /// <param name="timeoutMs">Timeout in milliseconds for waiting on task completion.</param>
+        /// <returns>A Task representing the asynchronous operation.</returns>
+        public async Task CancelAndWaitAsync(int timeoutMs = 5000)
+        {
+            try
+            {
+                // Cancel the processing
+                _cancellationTokenSource?.Cancel();
+                IdleLog.Debug("[WebhookQueue] Processing cancelled, waiting for tasks to complete");
+                
+                // Wait for all active tasks to complete
+                Task[] tasksToWaitFor;
+                lock (_tasksLock)
+                {
+                    tasksToWaitFor = _runningTasks.ToArray();
+                }
+                
+                if (tasksToWaitFor.Length > 0)
+                {
+                    // Use a timeout in case tasks get stuck
+                    var waitTask = Task.WhenAll(tasksToWaitFor);
+                    var completedTask = await Task.WhenAny(waitTask, Task.Delay(timeoutMs));
+                    
+                    if (completedTask != waitTask)
+                    {
+                        IdleLog.Warn($"[WebhookQueue] Timeout waiting for {tasksToWaitFor.Length} tasks to complete");
+                    }
+                    else
+                    {
+                        IdleLog.Debug($"[WebhookQueue] All {tasksToWaitFor.Length} tasks completed successfully");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                IdleLog.Error($"[WebhookQueue] Error during cancel and wait: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Releases all resources used by the WebhookQueue.
+        /// </summary>
+        public void Dispose()
+        {
+            try
+            {
+                CancelProcessing();
+                
+                // Wait briefly to allow running tasks to terminate
+                Task.Delay(100).Wait();
+                
+                // Dispose of semaphores
+                _processingLock?.Dispose();
+                _parallelismLimiter?.Dispose();
+                
+                // Dispose of CancellationTokenSource
+                _cancellationTokenSource?.Dispose();
+                
+                IdleLog.Debug("[WebhookQueue] Resources disposed properly");
+            }
+            catch (Exception ex)
+            {
+                IdleLog.Error($"[WebhookQueue] Error during disposal: {ex.Message}");
             }
         }
 
