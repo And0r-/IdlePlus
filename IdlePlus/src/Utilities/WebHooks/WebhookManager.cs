@@ -21,7 +21,7 @@ namespace IdlePlus.Utilities
         // Methods that can have a request body
         private static readonly HashSet<string> MethodsWithBody = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "POST", "PUT", "PATCH"
+            "POST", "PUT"
         };
 
         /// <summary>
@@ -358,6 +358,16 @@ namespace IdlePlus.Utilities
             {
                 IdleLog.Error($"[WebhookManager] Error during cleanup: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// Checks if a webhook type is enabled in the settings.
+        /// </summary>
+        /// <param name="webhookType">The webhook type to check.</param>
+        /// <returns>True if the webhook is enabled; otherwise, false.</returns>
+        public static bool IsWebhookTypeEnabled(WebhookType webhookType)
+        {
+            return ModSettings.Hooks.WebhookToggles.TryGetValue(webhookType, out var toggle) && toggle.Value;
         }
     }
 

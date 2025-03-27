@@ -19,49 +19,39 @@ namespace IdlePlus.Utilities
         {
             IdleLog.Info("[WebhookTests] Starting webhook tests...");
 
-            // Test 1: Call with an Il2CppSystem-compatible JSON string
-            IdleLog.Debug("[WebhookTests] Test 1: Il2CppSystem-compatible JSON string");
+            // Test 1: Standard Minigame start event
+            IdleLog.Debug("[WebhookTests] Test 1: Minigame start event");
             WebhookManager.AddSendWebhook(
-                WebhookType.MarketData,
+                WebhookType.Minigame,
                 new Dictionary<string, string>
                 {
-                    { "action", "testIl2cppString" }
-                },
-                "[{\"dummy\":true}]"
+                    { "action", "start" },
+                    { "type", "fishing" }
+                }
             );
 
-            // Test 2: Call with null JSON data (should simply send a GET request)
-            IdleLog.Debug("[WebhookTests] Test 2: Null JSON data");
+            // Test 2: Minigame stop event
+            IdleLog.Debug("[WebhookTests] Test 2: Minigame stop event");
             WebhookManager.AddSendWebhook(
-                WebhookType.MarketData,
+                WebhookType.Minigame,
                 new Dictionary<string, string>
                 {
-                    { "action", "testGet" }
-                },
-                null
+                    { "action", "stop" },
+                    { "type", "mining" }
+                }
             );
 
-            // Test 3: Call with a valid JSON string
-            IdleLog.Debug("[WebhookTests] Test 3: Valid JSON string");
-            string validJson = "{\"price\":123,\"currency\":\"USD\"}";
+            // Test 3: Minigame start with JSON data
+            IdleLog.Debug("[WebhookTests] Test 3: Minigame start with JSON data");
+            string eventJson = "{\"difficulty\":\"hard\",\"duration\":180}";
             WebhookManager.AddSendWebhook(
-                WebhookType.MarketData,
+                WebhookType.Minigame,
                 new Dictionary<string, string>
                 {
-                    { "action", "update" }
+                    { "action", "start" },
+                    { "type", "combat" }
                 },
-                validJson
-            );
-
-            // Test 4: Call with an invalid JSON string (expected to fail)
-            IdleLog.Debug("[WebhookTests] Test 4: Invalid JSON string (expected to fail)");
-            WebhookManager.AddSendWebhook(
-                WebhookType.MarketData,
-                new Dictionary<string, string>
-                {
-                    { "action", "testInvalid" }
-                },
-                "asdf"
+                eventJson
             );
 
             // Log statistics
