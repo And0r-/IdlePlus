@@ -69,13 +69,10 @@ namespace IdlePlus.Utilities.Helpers {
 
 		private static void InitializeInputField() {
 			var copyInputField = GameObjects.FindByPathNonNull("PopupManager/Canvas/HardPopups/SettingsPopup2/Panels/BlocksSection/BlockPlayerInputField");
-			if (copyInputField != null)
-			{
+			if (copyInputField != null) {
 				_baseInputField = Object.Instantiate(copyInputField, PrefabContainer.transform, false);
 				_baseInputField.name = "IdlePlusInputField";
-			}
-			else
-			{
+			} else {
 				IdleLog.Info("InputField prefab not found by path!");
 			}
 		}
@@ -101,20 +98,17 @@ namespace IdlePlus.Utilities.Helpers {
 		}
 
 		public static GameObject CreateInputField(string name, Transform parent = null) {
-			if (_baseInputField == null)
-			{
+			if (_baseInputField == null) {
 				InitializeInputField();
 			}
-			if (_baseInputField == null)
-			{
+			if (_baseInputField == null) {
 				var fallback = new GameObject(name);
 				fallback.AddComponent<RectTransform>();
 				return fallback;
 			}
 			var inputField = Object.Instantiate(_baseInputField);
 			inputField.name = name;
-			if (parent != null)
-			{
+			if (parent != null) {
 				inputField.transform.SetParent(parent, false);
 			}
 			return inputField;

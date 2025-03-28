@@ -159,8 +159,7 @@ namespace IdlePlus.Settings {
 				.ToArray()
 		);
 
-		public static class Hooks
-		{
+		public static class Hooks {
 			public static readonly StringSetting BackendHookServer = StringSetting.Create(
 				"hook_backendUrl",
 				"The URL for the backend hook server.",
@@ -186,11 +185,9 @@ namespace IdlePlus.Settings {
 			/// the configured settings name, the request method, and the URL path.
 			/// </summary>
 			/// <returns>A dictionary mapping each WebhookType to a ToggleSetting.</returns>
-			private static Dictionary<WebhookType, ToggleSetting> CreateWebhookToggles()
-			{
+			private static Dictionary<WebhookType, ToggleSetting> CreateWebhookToggles() {
 				var toggles = new Dictionary<WebhookType, ToggleSetting>();
-				foreach (WebhookType webhook in Enum.GetValues(typeof(WebhookType)))
-				{
+				foreach (WebhookType webhook in Enum.GetValues(typeof(WebhookType))) {
 					var config = WebhookConfigProvider.GetConfig(webhook);
 					string id = webhook.ToString() + "WebHook";
 					string displayName = $"{config.SettingsName}\n{config.RequestMethod} {config.UrlPath}";
