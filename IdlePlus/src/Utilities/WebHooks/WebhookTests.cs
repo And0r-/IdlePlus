@@ -23,7 +23,7 @@ namespace IdlePlus.Utilities {
 				new Dictionary<string, string>
 				{
 					{ "action", "start" },
-					{ "type", "fishing" }
+					{ "type", "Gathering" }
 				}
 			);
 
@@ -34,7 +34,7 @@ namespace IdlePlus.Utilities {
 				new Dictionary<string, string>
 				{
 					{ "action", "stop" },
-					{ "type", "mining" }
+					{ "type", "Gathering" }
 				}
 			);
 
@@ -46,7 +46,7 @@ namespace IdlePlus.Utilities {
 				new Dictionary<string, string>
 				{
 					{ "action", "start" },
-					{ "type", "combat" }
+					{ "type", "Gathering" }
 				},
 				eventJson
 			);
