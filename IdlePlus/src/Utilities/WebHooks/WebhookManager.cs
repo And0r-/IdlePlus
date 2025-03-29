@@ -289,31 +289,6 @@ namespace IdlePlus.Utilities {
 		}
 
 		/// <summary>
-		/// Cleans up all webhook processing resources.
-		/// </summary>
-		/// <param name="waitForCompletion">If true, waits for completion of all pending requests.</param>
-		/// <param name="timeoutMs">Timeout in milliseconds for waiting for completion.</param>
-		/// <returns>A Task representing the asynchronous cleanup operation.</returns>
-		public static async Task CleanupAsync(bool waitForCompletion = true, int timeoutMs = 5000) {
-			try {
-				IdleLog.Info("[WebhookManager] Starting cleanup process");
-
-				// Wait for completion of running requests if desired
-				if (waitForCompletion) {
-					IdleLog.Debug($"[WebhookManager] Waiting up to {timeoutMs}ms for pending requests");
-					await Task.Delay(timeoutMs);
-				}
-
-				// Reset statistics
-				WebhookMetrics.Reset();
-
-				IdleLog.Info("[WebhookManager] Cleanup completed");
-			} catch (Exception ex) {
-				IdleLog.Error($"[WebhookManager] Error during cleanup: {ex.Message}");
-			}
-		}
-
-		/// <summary>
 		/// Checks if a webhook type is enabled in the settings.
 		/// </summary>
 		/// <param name="webhookType">The webhook type to check.</param>

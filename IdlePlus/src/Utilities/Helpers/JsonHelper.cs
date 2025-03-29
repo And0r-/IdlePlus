@@ -68,24 +68,5 @@ namespace IdlePlus.Utilities {
 
 			return false;
 		}
-
-		/// <summary>
-		/// Tries to parse JSON and returns a boolean indicating success.
-		/// </summary>
-		/// <param name="json">The JSON string to parse.</param>
-		/// <param name="result">The parsed object if successful; otherwise, null.</param>
-		/// <returns>True if parsing was successful; otherwise, false.</returns>
-		public static bool TryParseJson(string json, out object result) {
-			result = null;
-			if (string.IsNullOrEmpty(json))
-				return false;
-
-			try {
-				result = JsonConvert.DeserializeObject(json);
-				return true;
-			} catch (Exception) {
-				return false;
-			}
-		}
 	}
 }

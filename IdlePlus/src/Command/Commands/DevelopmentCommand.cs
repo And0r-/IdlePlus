@@ -32,7 +32,7 @@ namespace IdlePlus.Command.Commands {
 			var webhookCommand = Literal.Of("webhook");
 
 			// Run all predefined tests
-			webhookCommand.Then(Literal.Of("run-tests")
+			webhookCommand.Then(Literal.Of("run-test")
 				.Executes(HandleWebhookRunTests));
 
 			// Start repeating test runner
@@ -45,14 +45,11 @@ namespace IdlePlus.Command.Commands {
 			webhookCommand.Then(Literal.Of("stop-test-repeater").Executes(HandleWebhookStopTestRepeater));
 
 			// Display status information
-			webhookCommand.Then(Literal.Of("status").Executes(HandleWebhookStatus));
+			webhookCommand.Then(Literal.Of("status-test-repeater").Executes(HandleWebhookStatus));
 
 			// Metrics and statistics commands
 			webhookCommand.Then(Literal.Of("show-metrics").Executes(HandleWebhookShowMetrics));
 			webhookCommand.Then(Literal.Of("reset-metrics").Executes(HandleWebhookResetMetrics));
-
-			// Resource management commands
-			webhookCommand.Then(Literal.Of("cleanup-resources").Executes(HandleWebhookCleanupResources));
 
 			// Add the webhook command to the main command
 			command.Then(webhookCommand);
@@ -201,16 +198,6 @@ namespace IdlePlus.Command.Commands {
 
 				statusMessage.AppendLine($"- Pending requests: {queuedCount}");
 
-				// Add enabled webhook types info from WebhookManager
-				statusMessage.AppendLine("- Webhook types status:");
-				foreach (WebhookType type in System.Enum.GetValues(typeof(WebhookType))) {
-					var config = WebhookConfigProvider.GetConfig(type);
-					if (config != null) {
-						string statusText = WebhookManager.IsWebhookTypeEnabled(type) ? "Enabled" : "Disabled";
-						statusMessage.AppendLine($"  • {type} ({config.SettingsName}): {statusText}");
-					}
-				}
-
 				IdleLog.Info($"[DevCommand] Webhook status:\n{statusMessage}");
 				return 1;
 			} catch (Exception ex) {
@@ -243,31 +230,6 @@ namespace IdlePlus.Command.Commands {
 				return 1;
 			} catch (Exception ex) {
 				IdleLog.Error($"[DevCommand] Error resetting webhook metrics: {ex.Message}");
-				return 0;
-			}
-		}
-
-		/// <summary>
-		/// Cleanup webhook system resources 
-		/// </summary>
-		private static int HandleWebhookCleanupResources(CommandContext<CommandSender> context) {
-			try {
-				IdleLog.Info("[DevCommand] Cleaning up webhook resources. This may take a moment...");
-
-				Task.Run(async () => {
-					try {
-						await WebhookManager.CleanupAsync();
-						// Since we can't directly message the player after the task completes,
-						// we can only log the result
-						IdleLog.Info("[DevCommand] Webhook resource cleanup completed successfully");
-					} catch (Exception ex) {
-						IdleLog.Error($"[DevCommand] Error during async webhook cleanup: {ex.Message}");
-					}
-				});
-
-				return 1;
-			} catch (Exception ex) {
-				IdleLog.Error($"[DevCommand] Error initiating webhook cleanup: {ex.Message}");
 				return 0;
 			}
 		}
