@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using IdlePlus.Utilities;
 using System;
 
 namespace IdlePlus.Utilities {
@@ -108,27 +107,15 @@ namespace IdlePlus.Utilities {
 				IdleLog.Info("[WebhookTests] Stopping test repeater");
 
 				try {
-					// Based on the IdleTasks implementation, we know the object is an IdleTask with Cancel method
 					var idleTask = _runningRepeater as IdleTasks.IdleTask;
-					if (idleTask != null) {
-						idleTask.Cancel();
-						IdleLog.Info("[WebhookTests] Stopped repeater using IdleTask.Cancel() method");
-					} else {
-						// Fallback to reflection if the cast didn't work
-						var cancelMethod = _runningRepeater.GetType().GetMethod("Cancel");
-						if (cancelMethod != null) {
-							cancelMethod.Invoke(_runningRepeater, null);
-							IdleLog.Info("[WebhookTests] Stopped repeater using reflection to call Cancel() method");
-						} else {
-							IdleLog.Info("[WebhookTests] Could not find a way to stop the repeater task");
-						}
-					}
+					idleTask.Cancel();
+					IdleLog.Info("[WebhookTests] Stopped repeater using IdleTask.Cancel() method");
+
 				} catch (Exception ex) {
 					IdleLog.Error($"[WebhookTests] Error stopping repeater: {ex.Message}");
 					IdleLog.Debug($"[WebhookTests] Repeater type: {_runningRepeater.GetType().FullName}");
 				}
 
-				// Regardless of whether we could stop it properly, clear our reference
 				_runningRepeater = null;
 				return true;
 			}
