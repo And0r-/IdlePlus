@@ -39,11 +39,11 @@ To use webhooks:
 When developer tools are enabled, you can use these commands for testing webhooks:
 
 ```
-/dev webhook run-tests           - Run predefined webhook tests
-/dev webhook status              - Show webhook configuration status
-/dev webhook show-metrics        - Display performance metrics
-/dev webhook run-test-repeater   - Start automatically running tests at intervals
-/dev webhook stop-test-repeater  - Stop automatic test runner
+/dev webhook run-test                - Run predefined webhook tests
+/dev webhook show-metrics            - Display performance metrics
+/dev webhook run-test-repeater       - Start automatically running tests at intervals
+/dev webhook stop-test-repeater      - Stop automatic test runner
+/dev webhook status-test-repeater    - Show webhook configuration status
 ```
 
 ## Available Webhook Types
