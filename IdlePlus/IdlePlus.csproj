@@ -110,6 +110,9 @@
         <Reference Include="UnityEngine.AssetBundleModule">
           <HintPath>..\libs\interop\UnityEngine.AssetBundleModule.dll</HintPath>
         </Reference>
+		<Reference Include="UnityEngine.AudioModule">
+        	<HintPath>..\libs\interop\UnityEngine.AudioModule.dll</HintPath>
+    	</Reference>
         <Reference Include="UnityEngine.CoreModule">
           <HintPath>..\libs\interop\UnityEngine.CoreModule.dll</HintPath>
         </Reference>
@@ -138,6 +141,9 @@
           <HintPath>..\libs\interop\UnityEngine.UIModule.dll</HintPath>
         </Reference>
     </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\Sounds\**\*.mp3" />
+	</ItemGroup>
     <ItemGroup>
         <!-- Libraries -->
         <Compile Include="Libraries\Brigadier.NET\**\*.cs">

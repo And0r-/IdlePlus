@@ -20,7 +20,7 @@ namespace IdlePlus.Settings {
 		// Features category
 		public static readonly SettingCategory FeaturesCategory = SettingCategory.Create("Features",
 			Features.TotalWealth, Features.TotalWealthVendorValue, Features.ScrollInfo, 
-			Features.EquipmentStatsInfo, Features.PotionTime, Features.ChatItems);
+			Features.EquipmentStatsInfo, Features.PotionTime, Features.ChatItems, Features.RaidAudioAlerts);
         
 		// Feature settings
 		public static class Features {
@@ -58,6 +58,12 @@ namespace IdlePlus.Settings {
 				"feature_chatItem", true,
 				"Item names in chat that can be hovered over to display the item.",
 				true);
+
+			public static readonly ToggleSetting RaidAudioAlerts = ToggleSetting.Create(
+				"feature_raidAudioAlerts",
+				"Spielt Audio-Alerts vor Phasenübergängen in Raids ab.",
+				true
+			);
 		}
 		#endregion
 
