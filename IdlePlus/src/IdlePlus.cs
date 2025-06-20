@@ -17,88 +17,89 @@ using PlayerMarket;
 using Object = UnityEngine.Object;
 
 namespace IdlePlus {
-	
-	[BepInPlugin(ModGuid, ModName, ModVersion)]
-	public class IdlePlus : BasePlugin {
-		
-		internal const string
-			ModName = "Idle Plus",
-			ModAuthor = "Uraxys",
-			ModID = "idleplus",
-			ModGuid = "dev.uraxys.idleplus",
-			ModVersion = "1.4.2"
+   
+    [BepInPlugin(ModGuid, ModName, ModVersion)]
+    public class IdlePlus : BasePlugin {
+       
+        internal const string
+            ModName = "Idle Plus",
+            ModAuthor = "Uraxys",
+            ModID = "idleplus",
+            ModGuid = "dev.uraxys.idleplus",
+            ModVersion = "1.4.2"
 #if DEBUG
-			             + "-DEBUG";
+                         + "-DEBUG";
 #else
-			             ;
+                         ;
 #endif
-
-		internal const bool PerformanceTest = false;
-		internal static IntPtr WindowHandle = IntPtr.Zero;
-		
-		public override void Load() {
-			IdleLog.Logger = Log;
-			IdleLog.Info($"Loading Idle Plus v{ModVersion}...");
-			
-			TexturePackManager.Load();
-			ModSettings.Load();
-
-			// Attributes
-			RegisterIl2CppAttributeHandler.Register();
-			InitializeAttributeHandler.Load();
-			InitializeOnceAttributeHandler.Load();
-			
-			// Create the IdlePlus game object with our custom behaviour.
-			IdlePlusBehaviour.Create();
-			
-			// Load harmony patches.
-			var harmony = new Harmony(ModGuid);
-			harmony.PatchAll();
-			PerformanceTestPatch.Patch(harmony);
-			
-			// Events
-			Events.Scene.OnLobby.Register(OnSceneLobby);
-			Events.Player.OnLogin.Register(OnLogin);
-			
-			// Popup testing
-			TestPopupTwo.PopupKey = CustomPopupManager.Register("IdlePlus:TestPopupTwo", TestPopupTwo.Create);
-			
-			// Create the market prices update task.
-			IdleTasks.Repeat(0, 60, task => {
-				if (!NetworkClient.IsConnected()) return;
-				IdleAPI.UpdateMarketPrices();
-			});
-			
-			IdleLog.Info($"Idle Plus v{ModVersion} loaded!");
-		}
-		
-		private static void OnLogin(PlayerLoginEventContext ctx) {
-			// Find the player market and "initialize" it.
-			var playerMarket = Object.FindObjectOfType<PlayerMarketPage>(true);
-			playerMarket.gameObject.SetActive(true);
-			playerMarket.gameObject.SetActive(false);
-			
-			// Do one time initialization for objects that are only created once.
-			InitializeOnceAttributeHandler.InitializeOnce();
-			// Do initialization for objects that are recreated on login.
-			InitializeAttributeHandler.Initialize();
-				
-			// Update market prices.
-			IdleAPI.UpdateMarketPrices();
-			
-			// Update the window title to display the current player name.
-			// NOTE: Only works on windows.
-			if (WindowHandle != IntPtr.Zero) {
-				WindowUtils.SetWindowText(WindowHandle, $"Idle Clans - {ctx.PlayerData.Username ?? "Null/Name"}");
-			}
-		}
-
-		private static void OnSceneLobby() {
-			// Update the window title to display "Idle Clans".
-			// NOTE: Only works on windows.
-			if (WindowHandle != IntPtr.Zero) {
-				WindowUtils.SetWindowText(WindowHandle, "Idle Clans");
-			}
-		}
-	}
+        internal const bool PerformanceTest = false;
+        internal static IntPtr WindowHandle = IntPtr.Zero;
+       
+        public override void Load() {
+            IdleLog.Logger = Log;
+            IdleLog.Info($"Loading Idle Plus v{ModVersion}...");
+           
+            TexturePackManager.Load();
+            ModSettings.Load();
+            // Attributes
+            RegisterIl2CppAttributeHandler.Register();
+            InitializeAttributeHandler.Load();
+            InitializeOnceAttributeHandler.Load();
+           
+            // Create the IdlePlus game object with our custom behaviour.
+            IdlePlusBehaviour.Create();
+           
+            // Load harmony patches.
+            var harmony = new Harmony(ModGuid);
+            harmony.PatchAll();
+            PerformanceTestPatch.Patch(harmony);
+            
+            // Initialize Debug Explorer
+            DebugExplorer.Initialize(Config);
+           
+            // Events
+            Events.Scene.OnLobby.Register(OnSceneLobby);
+            Events.Player.OnLogin.Register(OnLogin);
+           
+            // Popup testing
+            TestPopupTwo.PopupKey = CustomPopupManager.Register("IdlePlus:TestPopupTwo", TestPopupTwo.Create);
+           
+            // Create the market prices update task.
+            IdleTasks.Repeat(0, 60, task => {
+                if (!NetworkClient.IsConnected()) return;
+                IdleAPI.UpdateMarketPrices();
+            });
+           
+            IdleLog.Info($"Idle Plus v{ModVersion} loaded!");
+        }
+       
+        private static void OnLogin(PlayerLoginEventContext ctx) {
+            // Find the player market and "initialize" it.
+            var playerMarket = Object.FindObjectOfType<PlayerMarketPage>(true);
+            playerMarket.gameObject.SetActive(true);
+            playerMarket.gameObject.SetActive(false);
+           
+            // Do one time initialization for objects that are only created once.
+            InitializeOnceAttributeHandler.InitializeOnce();
+            // Do initialization for objects that are recreated on login.
+            InitializeAttributeHandler.Initialize();
+               
+            // Update market prices.
+            IdleAPI.UpdateMarketPrices();
+           
+            // Update the window title to display the current player name.
+            // NOTE: Only works on windows.
+            if (WindowHandle != IntPtr.Zero) {
+                WindowUtils.SetWindowText(WindowHandle, $"Idle Clans - {ctx.PlayerData.Username ?? "Null/Name"}");
+            }
+        }
+        
+        private static void OnSceneLobby() {
+            // Update the window title to display "Idle Clans".
+            // NOTE: Only works on windows.
+            if (WindowHandle != IntPtr.Zero) {
+                WindowUtils.SetWindowText(WindowHandle, "Idle Clans");
+            }
+        }
+    }
 }
